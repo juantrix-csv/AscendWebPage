@@ -335,6 +335,13 @@
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         }
 
+        .catalog-grid .status-message {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--color-navy);
+            font-weight: 500;
+        }
+
         .product-card {
             background: rgba(255, 255, 255, 0.9);
             border-radius: 18px;
@@ -354,6 +361,12 @@
         .product-card span {
             color: var(--color-gold-dark);
             font-weight: 600;
+        }
+
+        .product-card .product-meta {
+            margin: 0;
+            font-size: 0.95rem;
+            color: rgba(23, 42, 69, 0.7);
         }
 
         .product-card .btn {
@@ -645,37 +658,9 @@
                     <h2>Catálogo destacado</h2>
                     <p>Descubrí nuestra curaduría inicial y filtra según tus intereses.</p>
                 </div>
-                <div class="catalog-filters" role="group" aria-label="Filtros de catálogo">
-                    <button class="filter-btn active" type="button" data-filter="all">Todos</button>
-                    <button class="filter-btn" type="button" data-filter="suplementos">Suplementos</button>
-                    <button class="filter-btn" type="button" data-filter="frutos-secos">Frutos secos</button>
-                    <button class="filter-btn" type="button" data-filter="snacks">Snacks</button>
-                </div>
-                <div class="catalog-grid">
-                    <article class="product-card product" data-cat="suplementos">
-                        <h3>Proteína aislada premium</h3>
-                        <span>$XX.XXX</span>
-                        <p>Textura suave, excelente perfil de aminoácidos y sabores naturales.</p>
-                        <a class="btn btn-secondary" href="https://wa.me/WHATSAPP_NUMBER" target="_blank" rel="noopener">Comprar</a>
-                    </article>
-                    <article class="product-card product" data-cat="suplementos">
-                        <h3>Omega 3 concentrado</h3>
-                        <span>$XX.XXX</span>
-                        <p>Pura extracción marina, ideal para tu salud cardiovascular y mental.</p>
-                        <a class="btn btn-secondary" href="https://wa.me/WHATSAPP_NUMBER" target="_blank" rel="noopener">Comprar</a>
-                    </article>
-                    <article class="product-card product" data-cat="frutos-secos">
-                        <h3>Mix mediterráneo</h3>
-                        <span>$XX.XXX</span>
-                        <p>Almendras, pistachos y nueces bañadas en toques de miel artesanal.</p>
-                        <a class="btn btn-secondary" href="https://wa.me/WHATSAPP_NUMBER" target="_blank" rel="noopener">Comprar</a>
-                    </article>
-                    <article class="product-card product" data-cat="snacks">
-                        <h3>Barritas artesanales</h3>
-                        <span>$XX.XXX</span>
-                        <p>Semillas, dátiles y notas cítricas para energizar tus días.</p>
-                        <a class="btn btn-secondary" href="https://wa.me/WHATSAPP_NUMBER" target="_blank" rel="noopener">Comprar</a>
-                    </article>
+                <div class="catalog-filters" role="group" aria-label="Filtros de catálogo"></div>
+                <div class="catalog-grid" aria-live="polite">
+                    <p class="status-message">Cargando catálogo…</p>
                 </div>
             </div>
         </section>
@@ -790,35 +775,239 @@
         const navToggle = document.querySelector('.nav-toggle');
         const navigation = document.querySelector('nav');
 
-        navToggle.addEventListener('click', () => {
-            const isOpen = navigation.classList.toggle('open');
-            navToggle.setAttribute('aria-expanded', isOpen);
-        });
-
-        navigation.addEventListener('click', (event) => {
-            if (event.target.tagName === 'A' && navigation.classList.contains('open')) {
-                navigation.classList.remove('open');
-                navToggle.setAttribute('aria-expanded', 'false');
-            }
-        });
-
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const products = document.querySelectorAll('.product');
-
-        filterButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                const filter = button.dataset.filter;
-
-                filterButtons.forEach((btn) => btn.classList.remove('active'));
-                button.classList.add('active');
-
-                products.forEach((product) => {
-                    const category = product.dataset.cat;
-                    const show = filter === 'all' || category === filter;
-                    product.style.display = show ? 'flex' : 'none';
-                });
+        if (navToggle && navigation) {
+            navToggle.addEventListener('click', () => {
+                const isOpen = navigation.classList.toggle('open');
+                navToggle.setAttribute('aria-expanded', isOpen);
             });
+
+            navigation.addEventListener('click', (event) => {
+                if (event.target.tagName === 'A' && navigation.classList.contains('open')) {
+                    navigation.classList.remove('open');
+                    navToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        const SHEET_ID = '1G_C5vWYi6y4yZynICcvRms5Tz3P7lk3q';
+        const SHEET_GID = '1979682859';
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`;
+
+        const filterContainer = document.querySelector('.catalog-filters');
+        const productGrid = document.querySelector('.catalog-grid');
+        const whatsappBaseUrl = 'https://wa.me/WHATSAPP_NUMBER';
+
+        const currencyFormatter = new Intl.NumberFormat('es-AR', {
+            style: 'currency',
+            currency: 'ARS',
+            maximumFractionDigits: 0
         });
+
+        let productsData = [];
+        let activeFilter = 'all';
+
+        const slugify = (value) =>
+            value
+                .toString()
+                .normalize('NFD')
+                .replace(/\p{Diacritic}/gu, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '') || 'otros';
+
+        const formatPrice = (value) => currencyFormatter.format(Number(value));
+
+        const buildWhatsAppLink = (product) => {
+            const message = `Hola Ascend! Me interesa ${product.name} (${product.brand}). ¿Está disponible?`;
+            return `${whatsappBaseUrl}?text=${encodeURIComponent(message)}`;
+        };
+
+        function updateFilterButtons(selectedFilter) {
+            if (!filterContainer) return;
+
+            filterContainer.querySelectorAll('.filter-btn').forEach((button) => {
+                const isActive = button.dataset.filter === selectedFilter;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-pressed', String(isActive));
+            });
+        }
+
+        function createProductCard(product) {
+            const card = document.createElement('article');
+            card.className = 'product-card product';
+            card.dataset.cat = product.brandSlug;
+
+            const title = document.createElement('h3');
+            title.textContent = product.name;
+            card.appendChild(title);
+
+            const price = document.createElement('span');
+            price.textContent = formatPrice(product.price);
+            card.appendChild(price);
+
+            if (product.brand || product.format) {
+                const meta = document.createElement('p');
+                meta.className = 'product-meta';
+                meta.textContent = [product.brand, product.format].filter(Boolean).join(' · ');
+                card.appendChild(meta);
+            }
+
+            const button = document.createElement('a');
+            button.className = 'btn btn-secondary';
+            button.href = buildWhatsAppLink(product);
+            button.target = '_blank';
+            button.rel = 'noopener noreferrer';
+            button.textContent = 'Comprar';
+            card.appendChild(button);
+
+            return card;
+        }
+
+        function renderProducts(filter = activeFilter) {
+            if (!productGrid) return;
+
+            productGrid.innerHTML = '';
+
+            const filteredProducts =
+                filter === 'all'
+                    ? productsData
+                    : productsData.filter((product) => product.brandSlug === filter);
+
+            if (!filteredProducts.length) {
+                const message = document.createElement('p');
+                message.className = 'status-message';
+                message.textContent = productsData.length
+                    ? 'No hay productos para este filtro por el momento.'
+                    : 'No encontramos productos para mostrar.';
+                productGrid.appendChild(message);
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            filteredProducts.forEach((product) => {
+                fragment.appendChild(createProductCard(product));
+            });
+
+            productGrid.appendChild(fragment);
+            clampOverflow();
+        }
+
+        function renderFilters(entries) {
+            if (!filterContainer) return;
+
+            const fragment = document.createDocumentFragment();
+
+            const createButton = (label, value) => {
+                const button = document.createElement('button');
+                button.className = 'filter-btn';
+                button.type = 'button';
+                button.dataset.filter = value;
+                button.textContent = label;
+                button.setAttribute('aria-pressed', 'false');
+                return button;
+            };
+
+            fragment.appendChild(createButton('Todos', 'all'));
+
+            entries.forEach((entry) => {
+                fragment.appendChild(createButton(entry.label, entry.slug));
+            });
+
+            filterContainer.innerHTML = '';
+            filterContainer.appendChild(fragment);
+        }
+
+        function setFilter(filter) {
+            activeFilter = filter;
+            updateFilterButtons(filter);
+            renderProducts(filter);
+        }
+
+        async function loadProducts() {
+            if (!productGrid) return;
+
+            try {
+                const response = await fetch(SHEET_URL);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP ${response.status}`);
+                }
+
+                const rawText = await response.text();
+                const match = rawText.match(/google.visualization.Query.setResponse\((.*)\);/s);
+
+                if (!match) {
+                    throw new Error('Formato de respuesta inesperado');
+                }
+
+                const payload = JSON.parse(match[1]);
+                const rows = payload?.table?.rows ?? [];
+
+                productsData = rows
+                    .map((row) => {
+                        const cells = row.c || [];
+                        const name = cells[1]?.v ? String(cells[1].v).trim() : '';
+                        const brand = cells[2]?.v ? String(cells[2].v).trim() : '';
+                        const format = cells[3]?.v ? String(cells[3].v).trim() : '';
+                        const price = cells[4]?.v;
+
+                        if (!name || !brand || price == null) {
+                            return null;
+                        }
+
+                        return {
+                            name,
+                            brand,
+                            format,
+                            price: Number(price),
+                            brandSlug: slugify(brand)
+                        };
+                    })
+                    .filter(Boolean);
+
+                productsData.sort((a, b) => {
+                    const brandOrder = a.brand.localeCompare(b.brand, 'es');
+                    if (brandOrder !== 0) {
+                        return brandOrder;
+                    }
+
+                    return a.name.localeCompare(b.name, 'es');
+                });
+
+                const brandEntries = [];
+                const seenBrands = new Set();
+
+                productsData.forEach((product) => {
+                    if (!seenBrands.has(product.brandSlug)) {
+                        seenBrands.add(product.brandSlug);
+                        brandEntries.push({ slug: product.brandSlug, label: product.brand });
+                    }
+                });
+
+                renderFilters(brandEntries);
+                setFilter('all');
+            } catch (error) {
+                console.error('No se pudieron cargar los productos', error);
+                productGrid.innerHTML = '';
+                const message = document.createElement('p');
+                message.className = 'status-message';
+                message.textContent = 'No pudimos cargar el catálogo en este momento. Por favor, intentá nuevamente más tarde.';
+                productGrid.appendChild(message);
+            }
+        }
+
+        if (filterContainer) {
+            filterContainer.addEventListener('click', (event) => {
+                const button = event.target.closest('.filter-btn');
+                if (!button) {
+                    return;
+                }
+
+                const selectedFilter = button.dataset.filter || 'all';
+                setFilter(selectedFilter);
+            });
+        }
+
+        loadProducts();
 
         function clampOverflow() {
             document.querySelectorAll('.clamp-check').forEach((element) => {
