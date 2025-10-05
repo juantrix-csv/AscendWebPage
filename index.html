@@ -177,13 +177,57 @@
             right: 0;
             width: min(35vw, 420px);
             height: 100vh;
-            background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.75)), url('img/estatua-busto-de-david-griego-escultura.webp');
+            background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.75)), url("img/estatua culturista.png");
             background-size: cover;
             background-position: center;
             opacity: 0.18;
             filter: grayscale(100%) sepia(35%) contrast(120%);
             pointer-events: none;
             z-index: -1;
+        }
+
+        .parallax-banner {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: clamp(18rem, 55vh, 28rem);
+            margin: clamp(2rem, 4vw, 4rem) 0;
+            background-image: linear-gradient(120deg, rgba(10, 35, 66, 0.65), rgba(10, 35, 66, 0.25)), url("img/estatua culturista.png");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--color-white);
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .parallax-banner::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(10, 35, 66, 0.45), rgba(200, 164, 67, 0.25));
+            mix-blend-mode: screen;
+        }
+
+        .parallax-banner__content {
+            position: relative;
+            padding: clamp(1.5rem, 4vw, 3rem);
+            max-width: 720px;
+            backdrop-filter: blur(4px);
+        }
+
+        .parallax-banner__content h2 {
+            margin: 0 0 0.75rem;
+            font-size: clamp(1.9rem, 3vw, 2.8rem);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .parallax-banner__content p {
+            margin: 0;
+            font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+            line-height: 1.6;
         }
 
         .hero-grid {
@@ -585,6 +629,10 @@
                 display: none;
             }
 
+            .parallax-banner {
+                background-attachment: scroll;
+            }
+
             .footer-inner {
                 flex-direction: column;
                 align-items: flex-start;
@@ -639,6 +687,13 @@
                         </a>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="parallax-banner" aria-labelledby="parallax-title">
+            <div class="parallax-banner__content">
+                <h2 id="parallax-title">Elevá tu entrenamiento</h2>
+                <p>Inspirate en la fuerza clásica y encontrá suplementos diseñados para esculpir tu mejor versión.</p>
             </div>
         </section>
 
