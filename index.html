@@ -87,19 +87,17 @@
             color: var(--color-navy);
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.65rem;
         }
 
-        .logo span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 50%;
-            border: 2px solid var(--color-gold-dark);
-            color: var(--color-gold-dark);
-            font-weight: 600;
+        .logo-image {
+            width: clamp(2.5rem, 4vw, 3.2rem);
+            height: auto;
+            display: block;
+        }
+
+        .logo-text {
+            letter-spacing: 0.35rem;
         }
 
         nav {
@@ -173,14 +171,13 @@
         }
 
         .hero::after {
-            /* Reemplazar la URL del busto griego a continuación */
             content: "";
             position: fixed;
             top: 0;
             right: 0;
             width: min(35vw, 420px);
             height: 100vh;
-            background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.75)), url('URL_DEL_BUSTO_GRIEGO');
+            background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.75)), url('img/estatua-busto-de-david-griego-escultura.webp');
             background-size: cover;
             background-position: center;
             opacity: 0.18;
@@ -209,6 +206,19 @@
             font-size: clamp(2.2rem, 4vw, 3.4rem);
             margin: 0 0 1rem;
             color: var(--color-navy);
+        }
+
+        .hero-title {
+            display: flex;
+            align-items: center;
+            gap: clamp(0.75rem, 2vw, 1.5rem);
+            flex-wrap: wrap;
+        }
+
+        .hero-title__logo {
+            width: clamp(4rem, 12vw, 6rem);
+            height: auto;
+            flex-shrink: 0;
         }
 
         .hero p {
@@ -593,8 +603,8 @@
     <header class="site-header" id="inicio">
         <div class="container header-inner clamp-check">
             <a href="#inicio" class="logo" aria-label="Ascend inicio">
-                <span>A</span>
-                ASCEND
+                <img class="logo-image" src="img/Ascend Nutrition Store logo.png" alt="Ascend Nutrition Store" />
+                <span class="logo-text">Ascend</span>
             </a>
             <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="primary-navigation">
                 <span aria-hidden="true"></span>
@@ -615,7 +625,10 @@
         <section class="hero" aria-labelledby="hero-title">
             <div class="container hero-grid clamp-check">
                 <div class="hero-content">
-                    <h1 id="hero-title">Ascend: Dietética &amp; Suplementos con espíritu griego</h1>
+                    <h1 id="hero-title" class="hero-title">
+                        <img class="hero-title__logo" src="img/Ascend Nutrition Store logo.png" alt="Ascend Nutrition Store" />
+                        Ascend: Dietética &amp; Suplementos con espíritu griego
+                    </h1>
                     <p>Una propuesta premium que eleva tu bienestar con ingredientes seleccionados, asesoramiento personalizado y la elegancia clásica que inspira nuestros orígenes.</p>
                     <div class="hero-ctas">
                         <a class="btn btn-primary" href="https://wa.me/WHATSAPP_NUMBER" target="_blank" rel="noopener">
